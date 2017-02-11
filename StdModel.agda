@@ -1,11 +1,12 @@
-{-# OPTIONS --without-K --type-in-type #-}
+{-# OPTIONS --without-K --type-in-type --rewriting #-}
 
 -- Standard model with an impredicative semantic Set₀
 
 module StdModel where
 
 open import Lib
-open import Syntax
+open import Type
+open import Term
 
 Con'ᴹ : Con' → Set
 Con'ᴹ ∙      = ⊤
@@ -98,7 +99,6 @@ Tmᴹ (tapp {A} t B) Γᴹ Δᴹ =
       ((λ x → Tyᴹ A (x , Tyᴹ B Γᴹ)) & (id'ᴹ Γᴹ ⁻¹)
     ◾ Tyₛᴹ A (id'ₛ , B) Γᴹ ⁻¹)
   (Tmᴹ t Γᴹ Δᴹ (Tyᴹ B Γᴹ))
-
 
 -- examples
 ID : Tm ∙ (∀' (var vz ⇒ var vz))

@@ -1,5 +1,5 @@
 
-{-# OPTIONS --without-K --type-in-type #-}
+{-# OPTIONS --without-K --type-in-type --rewriting #-}
 
 -- Normalization with a presheaf logical predicate model for types and simple presheaf model for terms.
 -- We want to only have the minimum necessary structure for normalization, so that external correctness
@@ -9,7 +9,8 @@
 module PShNormalization where
 
 open import Lib
-open import Syntax
+open import Type
+open import Term
 
 record Cand {Γ'} Γ A : Set where
   constructor con
@@ -79,7 +80,7 @@ Tyᴹ {Γ'} (∀' A) {Δ'} Δ σ' σ'ᴹ = con
 
 Con-idₑᴹ : ∀ {Γ' Δ' σ'}(σ'ᴹ : Con'ᴹ Γ' {Δ'} σ') → coe (Con'ᴹ Γ' & idr'ₛₑ σ') (Con'ᴹₑ id'ₑ σ'ᴹ) ≡ σ'ᴹ
 Con-idₑᴹ ∙          = refl
-Con-idₑᴹ (σ'ᴹ , Aᴹ) = {!!} -- computation rule for coercion in Con'ᴹ
+Con-idₑᴹ (σ'ᴹ , Aᴹ) = {!!} -- computation rule for coercion in Con'ᴹ (BRING OUT THE CUBES)
 
 OPE'ᴹ : ∀ {Γ' Δ'}(σ' : OPE' Γ' Δ') → ∀ {Σ' δ'} → Con'ᴹ Γ' {Σ'} δ' → Con'ᴹ Δ' {Σ'} (σ' ₑ∘'ₛ δ')
 OPE'ᴹ ∙         {Σ'}  δ'ᴹ       = δ'ᴹ
@@ -104,13 +105,13 @@ Tyᴹₑ :
 Tyᴹₑ {A = var v} δ aᴹ = *∈ᴹₑ {v = v} δ aᴹ
 
 Tyᴹₑ {A = A ⇒ B} {σ' = σ'} {σ'ᴹ} {δ' = δ'} δ tᴹ {Ξ'} {Ξ} {ν'} ν aᴹ =
-  coe (apd2' (λ x y → Tyᴹ B Ξ x y .S) (ass'ₛₑₑ σ' δ' ν' ⁻¹) {!!}) -- Con'ᴹ-∘ₑ
+  coe {!!}
     (tᴹ (δ ∘ₑ ν)
-    (coe (apd2' (λ x y → Tyᴹ A Ξ x y .S) (ass'ₛₑₑ σ' δ' ν') {!!}) -- Con'ᴹ-∘ₑ
+    (coe {!!} -- Con'ᴹ-∘ₑ
       aᴹ))
 
 Tyᴹₑ {A = ∀' A } {σ' = σ'} {σ'ᴹ} {δ' = δ'} δ tᴹ {Ξ'} {Ξ} {ν'} ν B Bᴹ =
-  coe (apd2' (λ x y → Tyᴹ A Ξ (x , B) (y , Bᴹ) .S) (ass'ₛₑₑ σ' δ' ν' ⁻¹) {!!}) -- Con'ᴹ-∘ₑ
+  coe {!!}
     (tᴹ (δ ∘ₑ ν) B Bᴹ)
 
 --------------------------------------------------------------------------------
@@ -136,9 +137,9 @@ Tmᴹ (var v)    σ'ᴹ Γᴹ = ∈ᴹ v σ'ᴹ Γᴹ
 Tmᴹ (lam t)    σ'ᴹ Γᴹ = λ δ aᴹ → Tmᴹ t _ (Conᴹₑ δ Γᴹ , aᴹ)
 
 Tmᴹ {A = B} (app {A} f x) {Δ = Δ} {σ'} σ'ᴹ Γᴹ =
-  coe (apd2' (λ x₁ y → Tyᴹ B Δ x₁ y .S) (idr'ₛₑ σ' ) {!!}) -- Con-idₑᴹ
+  coe {!!}
     (Tmᴹ f σ'ᴹ Γᴹ idₑ
-      (coe (apd2' (λ x₁ y → Tyᴹ A Δ x₁ y .S) (idr'ₛₑ σ' ⁻¹) {!!}) -- Con-idₑᴹ
+      (coe {!!}
       (Tmᴹ x σ'ᴹ Γᴹ)))
 
 Tmᴹ (tlam t)   σ'ᴹ Γᴹ = λ δ B Bᴹ → Tmᴹ t (_ , Bᴹ) (Conᴹₑ δ Γᴹ ,*)
@@ -157,8 +158,7 @@ uCon' (Γ' ,*) = Con'ᴹₑ (drop id'ₑ) (uCon' Γ') , u* vz
 uCon : ∀ Γ' Γ → Conᴹ {Γ'} Γ Γ (uCon' Γ')
 uCon ∙      ∙       = ∙
 uCon Γ'     (Γ , A) =
-
-  coe (apd2' (λ x y → Conᴹ Γ (Γ , A) {x} y) (idr'ₛₑ id'ₛ) {!!}) -- Ty-idₑᴹ
+  coe {!!}
     (Conᴹₑ (drop {A = A} idₑ) (uCon Γ' Γ)) ,
   Tyᴹ A (Γ , A) id'ₛ (uCon' Γ') .U (coe (Ne (Γ , A) & (Ty-idₛ A ⁻¹)) (var vz))
 
