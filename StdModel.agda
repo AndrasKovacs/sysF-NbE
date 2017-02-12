@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --type-in-type --rewriting #-}
+{-# OPTIONS --type-in-type --rewriting #-}
 
 -- Standard model with an impredicative semantic Set₀
 
@@ -48,7 +48,7 @@ Tyₑᴹ :
   → Tyᴹ (Tyₑ σ A) Γᴹ ≡ Tyᴹ A (OPE'ᴹ σ Γᴹ)
 Tyₑᴹ (var v) σ Γᴹ = *∈ₑᴹ v σ Γᴹ
 Tyₑᴹ (A ⇒ B) σ Γᴹ = (λ x y → x → y) & Tyₑᴹ A σ Γᴹ ⊗ Tyₑᴹ B σ Γᴹ
-Tyₑᴹ (∀' A)  σ Γᴹ = Π-≡ refl (λ Bᴹ → Tyₑᴹ A (keep σ) (Γᴹ , Bᴹ))
+Tyₑᴹ (∀' A)  σ Γᴹ = ⟨ i ⟩ (∀ Bᴹ → Tyₑᴹ A (keep σ)(Γᴹ , Bᴹ) $ i)
 
 Sub'ᴹ : ∀ {Γ Δ} → Sub' Γ Δ → Con'ᴹ Γ → Con'ᴹ Δ
 Sub'ᴹ ∙       Γᴹ = tt
@@ -71,9 +71,8 @@ Tyₛᴹ :
   → Tyᴹ (Tyₛ σ A) Γᴹ ≡ Tyᴹ A (Sub'ᴹ σ Γᴹ)
 Tyₛᴹ (var v) σ Γᴹ = *∈ₛᴹ v σ Γᴹ
 Tyₛᴹ (A ⇒ B) σ Γᴹ = (λ x y → x → y) & Tyₛᴹ A σ Γᴹ ⊗ Tyₛᴹ B σ Γᴹ
-Tyₛᴹ (∀' A)  σ Γᴹ = Π-≡ refl λ Bᴹ →
-  Tyₛᴹ A (keep'ₛ σ) (Γᴹ , Bᴹ) ◾ (λ x → Tyᴹ A (x , Bᴹ)) &
-  (ₛ∘'ₑᴹ σ wk' (Γᴹ , Bᴹ) ◾ Sub'ᴹ σ & id'ₑᴹ Γᴹ)
+Tyₛᴹ (∀' A)  σ Γᴹ = ⟨ i ⟩ (∀ Bᴹ → (Tyₛᴹ A (keep'ₛ σ) (Γᴹ , Bᴹ)
+                 ◾ (⟨ j ⟩ Tyᴹ A ((ₛ∘'ₑᴹ σ wk' (Γᴹ , Bᴹ) ◾ Sub'ᴹ σ & id'ₑᴹ Γᴹ) $ j , Bᴹ))) $ i)
 
 id'ᴹ : ∀ {Γ} (Γᴹ : Con'ᴹ Γ) → Sub'ᴹ id'ₛ Γᴹ ≡ Γᴹ
 id'ᴹ {∙}    Γᴹ        = refl

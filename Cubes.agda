@@ -1,5 +1,5 @@
 
-{-# OPTIONS --without-K --rewriting --type-in-type #-}
+{-# OPTIONS --rewriting --type-in-type #-}
 
 module Cubes where
 
@@ -49,11 +49,14 @@ postulate
 {-#  REWRITE [-]-right #-}
 {-#  REWRITE path-η    #-}
 
+1- : I → I
+1- i = i [ ₁ - ₀ ]
+
 infixr 4 _◾_
 postulate
   _◾_        : {A : Set}{x y z : A} → x ≡ y → y ≡ z → x ≡ z
   coe        : {A B : Set} → A ≡ B → A → B
-  regularity : (A : Set) → coe (⟨ _ ⟩ A) ↦ (λ a → a)
+  regularity : (A : Set)(p : A ≡ A) → coe p ↦ (λ a → a)
 {-# REWRITE regularity #-}
 
 postulate
@@ -62,12 +65,12 @@ postulate
     → coe (⟨ i ⟩ ((a : A i) → B i a)) f
       ↦
       (λ a → coe (⟨ i ⟩ B i (coe (⟨ j ⟩ A (j [ ₁ - i ])) a ))
-                 (f (coe (⟨ i ⟩ A (i [ ₁ - ₀ ])) a)))
+                 (f (coe (⟨ i ⟩ A (1- i)) a)))
 
   coe-≡ :
       (A : I → Set)(x y : ∀ i → A i)(p : x ₀ ≡ y ₀)
     → coe (⟨ i ⟩ (_≡_ {A i} (x i) (y i))) p ↦
-       ⟨ i ⟩ coe (⟨ j ⟩ (A (i [ ₁ - j ]))) (x (i [ ₁ - ₀ ]))
+       ⟨ i ⟩ coe (⟨ j ⟩ (A (i [ ₁ - j ]))) (x (1- i))
      ◾ ⟨ i ⟩ coe (path A) (p $ i)
      ◾ ⟨ i ⟩ coe (⟨ j ⟩ (A (i [ j - ₁ ]))) (y i)
 
@@ -92,7 +95,10 @@ J P refl* p = coe (⟨ i ⟩ P (p $ i) (⟨ j ⟩ (p $ i [ ₀ - j ]))) refl*
 
 infix 5 _⁻¹
 _⁻¹ : ∀ {A : Set}{x y : A} → x ≡ y → y ≡ x
-_⁻¹ p = ⟨ i ⟩ (p $ (i [ ₁ - ₀ ]))
+_⁻¹ p = ⟨ i ⟩ (p $ 1- i)
+
+eq-inv : ∀ {A}{a b : A}(p : a ≡ b) → p ◾ p ⁻¹ ≡ refl
+eq-inv p = J (λ _ p → p ◾ p ⁻¹ ≡ refl) refl p
 
 infixl 9 _&_
 _&_ : {A : Set}{B : Set}(f : A → B){x y : A} → x ≡ y → f x ≡ f y
@@ -110,4 +116,11 @@ infixl 8 _⊗_
 _⊗_ : ∀ {A B}{f g : A → B}(p : f ≡ g){a a' : A}(q : a ≡ a') → f a ≡ g a'
 p ⊗ q = ⟨ i ⟩ (p $ i) (q $ i)
 
-
+apd2' :
+  {A : Set}{a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
+  {B : A → Set}{C : Set}
+  (f : ∀ a → B a → C){b₀ : B a₀}{b₁ : B a₁}
+  (b₂ : coe (B & a₂) b₀ ≡ b₁) → f a₀ b₀ ≡ f a₁ b₁
+apd2' {A}{a₀}{a₁} = J (λ a₁ (a₂ : a₀ ≡ a₁) → {B : A → Set}{C : Set}
+  (f : ∀ a → B a → C){b₀ : B a₀}{b₁ : B a₁}
+  (b₂ : coe (B & a₂) b₀ ≡ b₁) → f a₀ b₀ ≡ f a₁ b₁) (λ f b₂ → f a₀ & b₂) {a₁}

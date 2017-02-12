@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --rewriting --type-in-type #-}
+{-# OPTIONS --rewriting --type-in-type #-}
 
 module Lib where
 
@@ -21,7 +21,8 @@ record Σ (A : Set) (B : A → Set) : Set where
   constructor _,_
   field
     proj₁ : A
-    proj₂ : B proj₁
+    proj₂ : B proj₁    
+open Σ public    
 infixr 5 _,_
 
 ∃ : {A : Set} → (A → Set) → Set
@@ -29,8 +30,6 @@ infixr 5 _,_
 
 ∃₂ : {A : Set}{B : A → Set}(C : (x : A) → B x → Set) → Set
 ∃₂ C = ∃ λ a → ∃ λ b → C a b
-
-open Σ public
 
 _×_ : Set → Set → Set
 A × B = Σ A λ _ → B
@@ -54,21 +53,34 @@ data ⊥ : Set where
 ⊥-elim : ∀ {A : Set} → ⊥ → A
 ⊥-elim ()
 
+-- HEq
 --------------------------------------------------------------------------------
+record _≅_ {A B : Set}(a : A)(b : B) : Set where
+  constructor con
+  field
+    ty : A ≡ B
+    tm : coe ty a ≡ b
+open _≅_ public
 
-apd2' :
-  {A : Set}{a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
-  {B : A → Set}{C : Set}
-  (f : ∀ a → B a → C){b₀ : B a₀}{b₁ : B a₁}
-  (b₂ : coe (B & a₂) b₀ ≡ b₁) → f a₀ b₀ ≡ f a₁ b₁
-apd2' {A}{a₀}{a₁} = J (λ a₁ (a₂ : a₀ ≡ a₁) →   {B : A → Set}{C : Set}
-  (f : ∀ a → B a → C){b₀ : B a₀}{b₁ : B a₁}
-  (b₂ : coe (B & a₂) b₀ ≡ b₁) → f a₀ b₀ ≡ f a₁ b₁) (λ f b₂ → f a₀ & b₂) {a₁}
+uncoe : ∀ {A B}(p : A ≡ B) a → a ≅ coe p a
+uncoe p a = con p refl
 
-Π-≡ :
-    ∀ {A A' : Set} → (p : A ≡ A')
-  → ∀ {B : A → Set}{B' : A' → Set} → ((a : A) → B a ≡ B' (coe p a)) 
-  → ((a : A) → B a) ≡ ((a' : A') → B' a')
-Π-≡ {A} {A'} = J (λ A' (p : A ≡ A') → ∀ {B : A → Set}{B' : A' → Set} → ((a : A) → B a ≡ B' (coe p a)) 
-               → ((a : A) → B a) ≡ ((a' : A') → B' a')) (λ q → ⟨ i ⟩ ((a : A) → q a $ i)) {A'}
+refl̃ : ∀ {A}{a : A} → a ≅ a
+refl̃ = con refl refl
+
+infix 5 _⁻¹̃ 
+_⁻¹̃ : ∀ {A B}{a : A}{b : B} → a ≅ b → b ≅ a
+_⁻¹̃ {A} {B} {a} {b} (con ty tm) =
+  con (ty ⁻¹) (coe (ty ⁻¹) & tm ⁻¹ ◾ (λ p → coe p a) & eq-inv ty)
+
+infixr 4 _◾̃_ 
+_◾̃_ : ∀ {A B C}{a : A}{b : B}{c : C} → a ≅ b → b ≅ c → a ≅ c
+con ty tm ◾̃ con ty' tm' = con (ty ◾ ty') (coe ty' & tm ◾ tm')
+
+sub̃ : ∀ {A}(P : A → Set)(f : ∀ a → P a){a₀ a₁ : A}(a₂ : a₀ ≡ a₁) → f a₀ ≅ f a₁
+sub̃ P f a₂ = con (P & a₂) (⟨ i ⟩ coe (⟨ j ⟩ P (a₂ $ i [ j - ₁ ])) (f (a₂ $ i)))
+
+uñ : ∀ {A}{a b : A} → a ≅ b → a ≡ b
+uñ (con ty tm) = tm
+
 

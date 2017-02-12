@@ -1,4 +1,4 @@
-{-# OPTIONS --without-K --type-in-type --rewriting #-}
+{-# OPTIONS --type-in-type --rewriting #-}
 
 module Term where
 
