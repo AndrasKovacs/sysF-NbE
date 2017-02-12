@@ -23,8 +23,7 @@ postulate
   coe-vz' : (Γ : I → Con') → coe (⟨ i ⟩ *∈ (Γ i ,*)) vz ↦ vz
   coe-vs' : ∀ (Γ : I → Con') v → coe (⟨ i ⟩ *∈ (Γ i ,*)) (vs v) ↦ vs (coe (⟨ i ⟩ *∈ (Γ i)) v)
 
-{-# REWRITE coe-vz' #-}
-{-# REWRITE coe-vs' #-}
+{-# REWRITE coe-vz' coe-vs' #-}
 
 data Ty (Γ : Con') : Set where
   var : *∈ Γ → Ty Γ
@@ -39,9 +38,7 @@ postulate
   coe-∀' :
     ∀ (Γ : I → Con') (A : Ty (Γ ₀ ,*)) → coe (⟨ i ⟩ Ty (Γ i)) (∀' A) ↦ ∀' (coe (⟨ i ⟩ Ty (Γ i ,*)) A)
 
-{-# REWRITE coe-var #-}
-{-# REWRITE coe-_⇒_ #-}
-{-# REWRITE coe-∀' #-}
+{-# REWRITE coe-var coe-_⇒_ coe-∀' #-}
 
 -- Type embedding
 --------------------------------------------------------------------------------
@@ -57,8 +54,7 @@ postulate
   coe-Ty-keep :
     ∀ (Γ Δ : I → Con') σ → coe (⟨ i ⟩ OPE' (Γ i ,*) (Δ i ,*)) (keep σ) ↦ keep (coe (⟨ i ⟩ OPE' (Γ i) (Δ i)) σ)
 
-{-# REWRITE coe-Ty-drop #-}
-{-# REWRITE coe-Ty-keep #-}
+{-# REWRITE coe-Ty-drop coe-Ty-keep #-}
 
 id'ₑ : ∀ {Γ} → OPE' Γ Γ
 id'ₑ {∙}    = ∙
@@ -138,8 +134,7 @@ postulate
     ∀ (Γ Δ : I → Con') σ A
     → coe (⟨ i ⟩ Sub' (Γ i) (Δ i ,*)) (σ , A) ↦ coe (⟨ i ⟩ Sub' (Γ i) (Δ i)) σ , coe (⟨ i ⟩ Ty (Γ i)) A
 
-{-# REWRITE coe-Sub'-∙ #-}
-{-# REWRITE coe-Sub'-, #-}
+{-# REWRITE coe-Sub'-∙ coe-Sub'-, #-}
 
 _ₛ∘'ₑ_ : ∀ {Γ Δ Σ} → Sub' Δ Σ → OPE' Γ Δ → Sub' Γ Σ
 ∙       ₛ∘'ₑ δ = ∙

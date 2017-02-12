@@ -21,8 +21,7 @@ postulate
     ∀ (Δ : I → Con') σ
     → coe (⟨ i ⟩ Con (Δ i ,*)) (σ ,*) ↦ coe (⟨ i ⟩ Con (Δ i)) σ  ,*
 
-{-# REWRITE coe-Con-,  #-}
-{-# REWRITE coe-Con-,* #-}
+{-# REWRITE coe-Con-, coe-Con-,* #-}
 
 infix 3 _∈_
 data _∈_ : ∀ {Δ} (A : Ty Δ) → Con Δ → Set where
@@ -41,9 +40,7 @@ postulate
     ∀ (Δ : I → Con')(A : ∀ i → Ty (Δ i))(Γ : ∀ i → Con (Δ i)) (v : A ₀ ∈ Γ ₀)
     → coe (⟨ i ⟩ (Tyₑ wk' (A i) ∈ (Γ i ,*))) (vs* v) ↦ vs* (coe (⟨ i ⟩ (A i ∈ Γ i)) v)
 
-{-# REWRITE coe-∈-vz  #-}
-{-# REWRITE coe-∈-vs  #-}
-{-# REWRITE coe-∈-vs* #-}
+{-# REWRITE coe-∈-vz coe-∈-vs coe-∈-vs* #-}
 
 data Tm {Δ} (Γ : Con Δ) : Ty Δ → Set where
   var  : ∀ {A} → A ∈ Γ → Tm Γ A
@@ -73,11 +70,7 @@ postulate
     → coe (⟨ i ⟩ Tm (Γ i) (Tyₛ (id'ₛ , B i) (A i))) (tapp {Γ' ₀}{Γ ₀}{A ₀} t (B ₀))
     ↦ tapp {Γ' ₁}{Γ ₁}{A ₁} (coe (⟨ i ⟩ Tm (Γ i) (∀' (A i))) t) (B ₁)
 
-{-# REWRITE coe-Tm-var  #-}
-{-# REWRITE coe-Tm-lam  #-}
-{-# REWRITE coe-Tm-app  #-}
-{-# REWRITE coe-Tm-tlam #-}
-{-# REWRITE coe-Tm-tapp #-}
+{-# REWRITE coe-Tm-var coe-Tm-lam coe-Tm-app coe-Tm-tlam coe-Tm-tapp #-}
 
 -- Term embedding
 --------------------------------------------------------------------------------
@@ -89,10 +82,29 @@ data OPE : ∀ {Γ Δ} → OPE' Γ Δ → Con Γ → Con Δ → Set where
   drop  : ∀ {Γ Δ σ δ ν A} → OPE {Γ}{Δ} σ δ ν → OPE σ        (δ , A)        ν
   keep  : ∀ {Γ Δ σ δ ν A} → OPE {Γ}{Δ} σ δ ν → OPE σ        (δ , Tyₑ σ A) (ν , A)
 
--- postulate
---   coe-OPE-drop' :
---   ∀ (Γ' : I → Con')(Δ'
+postulate
+  coe-OPE-drop' :
+    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
+      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))
+    → coe (⟨ i ⟩ OPE (drop (σ' i)) (Γ i ,*) (Δ i)) (drop' σ)
+    ↦ drop' (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
+  coe-OPE-keep' :
+    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
+      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))
+    → coe (⟨ i ⟩ OPE (keep (σ' i)) (Γ i ,*) (Δ i ,*)) (keep' σ)
+    ↦ keep' (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
+  coe-OPE-drop :
+    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
+      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))(A : ∀ i → Ty (Γ' i))
+    → coe (⟨ i ⟩ OPE (σ' i) (Γ i , A i) (Δ i)) (drop σ)
+    ↦ drop (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
+  coe-OPE-keep :
+    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
+      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))(A : ∀ i → Ty (Δ' i))
+    → coe (⟨ i ⟩ OPE (σ' i) (Γ i , Tyₑ (σ' i) (A i)) (Δ i , A i)) (keep σ)
+    ↦ keep (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
 
+{-# REWRITE coe-OPE-drop' coe-OPE-keep' coe-OPE-drop  coe-OPE-keep #-}
 
 OPE'-of : ∀ {Γ' Δ' σ' Γ Δ} → OPE {Γ'}{Δ'} σ' Γ Δ → OPE' Γ' Δ'
 OPE'-of {σ' = σ'} _ = σ'
@@ -152,13 +164,6 @@ _∘ₑ_ {σ' = σ'} {δ'} (keep {ν = ν} {A} σ) (keep {δ = δ₁} δ₂) =
   (keepₜ {A = A} (σ ∘ₑ δ₂))
 
 
--- options for proving things
--- 1. define and apply assloads of coe reduction rules (most tedious)
--- 2. define OTT-like structure for coercions (dunno how well it works)
--- 3. use proof automation, maybe throw in JMeq too (dunno how performant, how well it works
---                                                   in Agda)
-
-
 -- Normal forms
 --------------------------------------------------------------------------------
 
@@ -172,6 +177,32 @@ mutual
     var  : ∀ {A} → A ∈ Δ → Ne Δ A
     app  : ∀ {A B} → Ne Δ (A ⇒ B) → Nf Δ A → Ne Δ B
     tapp : ∀ {A} → Ne Δ (∀' A) → (B : Ty Γ) → Ne Δ (Tyₛ (id'ₛ , B) A)
+
+postulate
+  coe-Nf-lam :
+    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A B  : ∀ i → Ty (Γ' i)) t
+    → coe (⟨ i ⟩ Nf (Γ i) (A i ⇒ B i)) (lam t) ↦ lam (coe (⟨ i ⟩ Nf (Γ i , A i) (B i)) t)
+  coe-Nf-tlam :
+    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i ,*)) t
+    → coe (⟨ i ⟩ Nf (Γ i) (∀' (A i))) (tlam t) ↦ tlam (coe (⟨ i ⟩ Nf (Γ i ,*) (A i)) t)
+  coe-Nf-ne :
+    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(v : ∀ i → *∈ (Γ' i)) n
+    → coe (⟨ i ⟩ Nf (Γ i) (var (v i))) (ne n) ↦ ne (coe (⟨ i ⟩ Ne (Γ i) (var (v i))) n)
+  coe-Ne-var :
+    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i)) v
+    → coe (⟨ i ⟩ Ne (Γ i) (A i)) (var v) ↦ var (coe (⟨ i ⟩ (A i ∈ Γ i)) v)
+  coe-Ne-app :
+    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i)) (A : Ty (Γ' ₀))(B : ∀ i → Ty (Γ' i)) (f : Ne (Γ ₀) (A ⇒ B ₀)) x
+    → coe (⟨ i ⟩ Ne (Γ i) (B i)) (app f x)
+    ↦ app
+        (coe (⟨ i ⟩ Ne (Γ i) (coe (⟨ j ⟩ Ty (Γ' (j [ ₀ - i ]))) A ⇒ B i)) f)
+        (coe (⟨ i ⟩ Nf (Γ i) (coe (⟨ j ⟩ Ty (Γ' (j [ ₀ - i ]))) A)) x)
+  coe-Ne-tapp :
+    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i)) (B : ∀ i → Ty (Γ' i))(A : ∀ i → Ty (Γ' i ,*)) t
+    → coe (⟨ i ⟩ Ne (Γ i) (Tyₛ (id'ₛ , B i) (A i))) (tapp {Γ' ₀}{Γ ₀}{A ₀} t (B ₀))
+    ↦ tapp {Γ' ₁}{Γ ₁}{A ₁} (coe (⟨ i ⟩ Ne (Γ i) (∀' (A i))) t) (B ₁)
+
+{-# REWRITE coe-Nf-lam coe-Nf-tlam coe-Nf-ne coe-Ne-var coe-Ne-app coe-Ne-tapp #-}
 
 tappₙₑ : ∀ {Γ}{Δ : Con Γ}{A} → Ne Δ (∀' A) → (B : Ty Γ) → Ne Δ (Tyₛ (id'ₛ , B) A)
 tappₙₑ = tapp

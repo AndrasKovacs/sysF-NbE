@@ -3,6 +3,9 @@
 
 module Cubes where
 
+-- Core definition of cubical equality. A simplification of Conor McBride's "cubical crossroads"
+-- presentation.
+
 postulate _↦_ : ∀ {A : Set} → A → A → Set
 {-# BUILTIN REWRITE _↦_ #-}
 infix 3 _↦_
@@ -72,7 +75,7 @@ postulate
   refl-◾ : (A : Set)(x y : A)(p : x ≡ y) → (⟨ _ ⟩ x) ◾ p ↦ p
   ◾-refl : (A : Set)(x y : A)(p : x ≡ y) → p ◾ (⟨ _ ⟩ y) ↦ p
 
-{-# REWRITE coe-Π #-}
+{-# REWRITE coe-Π  #-}
 {-# REWRITE coe-◾ #-}
 {-# REWRITE refl-◾ #-}
 {-# REWRITE ◾-refl #-}

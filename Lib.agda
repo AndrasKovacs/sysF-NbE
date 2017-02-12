@@ -54,18 +54,6 @@ data ⊥ : Set where
 ⊥-elim : ∀ {A : Set} → ⊥ → A
 ⊥-elim ()
 
--- data _⊎_ (A B : Set) : Set where
---   inl : A → A ⊎ B
---   inr : B → A ⊎ B
--- infixr 1 _⊎_
-
--- postulate
---   coe-inl : (A B : I → Set)(a : A ₀) → coe (⟨ i ⟩ (A i ⊎ B i)) (inl a) ↦ inl (coe (path A) a)
---   coe-inr : (A B : I → Set)(b : B ₀) → coe (⟨ i ⟩ (A i ⊎ B i)) (inr b) ↦ inr (coe (path B) b)
-
--- {-# REWRITE coe-inl #-}
--- {-# REWRITE coe-inr #-}
-
 --------------------------------------------------------------------------------
 
 apd2' :
