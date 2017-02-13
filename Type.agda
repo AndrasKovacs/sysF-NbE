@@ -41,7 +41,7 @@ wk' : ∀ {Γ} → OPE' (Γ ,*) Γ
 wk' = drop id'ₑ
 
 *∈ₑ : ∀ {Γ Δ} → OPE' Δ Γ → *∈ Γ → *∈ Δ
-*∈ₑ ∙ ()
+*∈ₑ ∙        v      = v
 *∈ₑ (drop σ) v      = vs (*∈ₑ σ v)
 *∈ₑ (keep σ) vz     = vz
 *∈ₑ (keep σ) (vs v) = vs (*∈ₑ σ v)

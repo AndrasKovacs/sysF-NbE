@@ -61,13 +61,6 @@ infixl 8 _⊗_
 _⊗_ : ∀ {α}{A B : Set α}{f g : A → B}(p : f ≡ g){a a' : A}(q : a ≡ a') → f a ≡ g a'
 refl ⊗ refl = refl
 
-ap2 :
-  ∀{α β γ}{A : Set α}{a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
-  {B : A → Set β}{C : Set γ}
-  (f : ∀ a → B a → C){b₀ : B a₀}{b₁ : B a₁}
-  (b₂ : coe (B & a₂) b₀ ≡ b₁) → f a₀ b₀ ≡ f a₁ b₁
-ap2 refl f refl = refl
-
 --------------------------------------------------------------------------------
 
 record Σ (A : Set) (B : A → Set) : Set where
@@ -99,15 +92,18 @@ data ⊥ : Set where
 -- HEq
 --------------------------------------------------------------------------------
 record _≅_ {α}{A B : Set α}(a : A)(b : B) : Set (suc α) where
+  constructor con
   field
     ty : A ≡ B
     tm : coe ty a ≡ b
 open _≅_ public
 
-uncoe : ∀ {α}{A B : Set α}(p : A ≡ B) a → a ≅ coe p a
-uncoe p a = record {ty = p; tm = refl}
+infix 5 _~
+pattern _~ p = record {ty = refl; tm = p}
+pattern refl̃ = refl ~
 
-pattern refl̃ = record {ty = refl; tm = refl}
+uncoe : ∀ {α}{A B : Set α}(p : B ≡ A) (b : B) → coe p b ≅ b
+uncoe refl a = refl̃
 
 infix 6 _⁻¹̃ 
 _⁻¹̃ : ∀ {α}{A B : Set α}{a : A}{b : B} → a ≅ b → b ≅ a
@@ -117,10 +113,75 @@ infixr 5 _◾̃_
 _◾̃_ : ∀ {α}{A B C : Set α}{a : A}{b : B}{c : C} → a ≅ b → b ≅ c → a ≅ c
 refl̃ ◾̃ q = q
 
-sub̃ : ∀ {α β}{A : Set α}(P : A → Set β)(f : ∀ a → P a){a₀ a₁ : A}(a₂ : a₀ ≡ a₁) → f a₀ ≅ f a₁
-sub̃ P f refl = refl̃
+ap̃ :
+  ∀ {α β}{A : Set α}{B : A → Set β}
+  (f : ∀ a → B a){a₀ a₁ : A}(a₂ : a₀ ≡ a₁) → f a₀ ≅ f a₁
+ap̃ f refl = refl̃
 
--- TODO: disable K, require {{IsSet}} here
+ap2̃ :
+  ∀ {α β γ}
+  {A : Set α}{B : A → Set β}{C : ∀ a → B a → Set γ}
+  (f : ∀ a → (b : B a) → C a b)
+  {a₀ a₁ : A}(a₂ : a₀ ≡ a₁){b₀ : B a₀}{b₁ : B a₁}(b₂ : b₀ ≅ b₁) → f a₀ b₀ ≅ f a₁ b₁
+ap2̃ f refl refl̃ = refl̃
+
+ap3̃ :
+  ∀ {α β γ δ}
+  {A : Set α}{B : A → Set β}{C : ∀ a (b : B a) → Set γ}{D : ∀ a (b : B a)(c : C a b) → Set δ}
+  (f : ∀ a b c → D a b c)
+  {a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
+  {b₀ : B a₀}{b₁ : B a₁}(b₂ : b₀ ≅ b₁)
+  {c₀ : C a₀ b₀}{c₁ : C a₁ b₁}(c₂ : c₀ ≅ c₁)
+  → f a₀ b₀ c₀ ≅ f a₁ b₁ c₁
+ap3̃ f refl refl̃ refl̃ = refl̃
+
+ap4̃ :
+  ∀ {α β γ δ ε}
+  {A : Set α}{B : A → Set β}{C : ∀ a (b : B a) → Set γ}
+    {D : ∀ a b (c : C a b) → Set δ}{E : ∀ a b c (d : D a b c) → Set ε}
+  (f : ∀ a b c d → E a b c d)
+  {a₀ a₁ : A}                        (a₂ : a₀ ≡ a₁)
+  {b₀ : B a₀}      {b₁ : B a₁}       (b₂ : b₀ ≅ b₁)
+  {c₀ : C a₀ b₀}   {c₁ : C a₁ b₁}    (c₂ : c₀ ≅ c₁)
+  {d₀ : D a₀ b₀ c₀}{d₁ : D a₁ b₁ c₁} (d₂ : d₀ ≅ d₁)  
+  → f a₀ b₀ c₀ d₀ ≅ f a₁ b₁ c₁ d₁
+ap4̃ f refl refl̃ refl̃ refl̃ = refl̃    
+
 uñ : ∀ {α}{A : Set α}{a b : A} → a ≅ b → a ≡ b
 uñ refl̃ = refl
+
+ap2 :
+  ∀{α β γ}{A : Set α}{B : A → Set β}{C : Set γ}
+  (f : ∀ a → B a → C)
+  {a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
+  {b₀ : B a₀}{b₁ : B a₁}(b₂ : b₀ ≅ b₁)
+  → f a₀ b₀ ≡ f a₁ b₁
+ap2 f refl refl̃ = refl
+
+Π-≡ :
+  ∀ {α β}{A : Set α}{B₀ B₁ : A → Set β}
+  → (B₂ : ∀ a → B₀ a ≡ B₁ a)
+  → (∀ a → B₀ a) ≡ (∀ a → B₁ a)
+Π-≡ B₂ = (λ B → ∀ a → B a) & ext B₂
+
+Πi-≡ :
+  ∀ {α β}{A : Set α}{B₀ B₁ : A → Set β}
+  → (B₂ : ∀ a → B₀ a ≡ B₁ a)
+  → (∀ {a} → B₀ a) ≡ (∀ {a} → B₁ a)
+Πi-≡ B₂ = (λ B → ∀ {a} → B a) & ext B₂
+
+ext̃ :
+  ∀ {α β}
+    {A : Set α}
+    {B₀ B₁ : A → Set β}
+    {f₀ : ∀ a → B₀ a}{f₁ : ∀ a → B₁ a}
+  → (∀ a → f₀ a ≅ f₁ a)
+  → f₀ ≅ f₁
+ext̃ {A = A} {B₀} {B₁} {f₀} {f₁} f₂ =
+  J (λ B₁ (B₂ : B₀ ≡ B₁) →
+          {f₀ : ∀ a → B₀ a}{f₁ : ∀ a → B₁ a}
+        → (∀ a → f₀ a ≅ f₁ a)
+        → f₀ ≅ f₁)
+     (λ {f₀}{f₁} f₂ → ext (λ a → uñ (f₂ a)) ~)
+     (ext (λ a → f₂ a .ty)) f₂
 
