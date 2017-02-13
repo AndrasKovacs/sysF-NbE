@@ -1,10 +1,9 @@
 
-{-# OPTIONS --without-K --type-in-type --rewriting #-}
+{-# OPTIONS --without-K --type-in-type #-}
 
 -- Normalization with a presheaf logical predicate model for types and simple presheaf model for terms.
 -- We want to only have the minimum necessary structure for normalization, so that external correctness
 -- proofs don't have to deal with mountains of coercion. We have more than enough coercion in any case.
-
 
 module PShNormalization where
 
@@ -20,16 +19,6 @@ record Cand {Γ'} Γ A : Set where
     U : Ne Γ A → S
 open Cand
 
-postulate
-  coe-Cand :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i))
-    → coe (⟨ i ⟩ Cand (Γ i) (A i)) ↦
-    (λ p → con (p .S)
-      (coe (⟨ i ⟩ ((p .S) → Nf (Γ i) (A i))) (p .Q))
-      (coe (⟨ i ⟩ (Ne (Γ i) (A i) → p .S)) (p .U)))
-
-{-# REWRITE coe-Cand #-}
-
 -- todo: pack (*ᴹ A) functor laws in
 *ᴹ : ∀ {Γ'} → Ty Γ' → Set
 *ᴹ {Γ'} A = ∀ Δ' Δ σ' → Cand {Δ'} Δ (Tyₑ σ' A)
@@ -40,17 +29,6 @@ postulate
 data Con'ᴹ : (Γ' : Con') → ∀ {Δ'} → Sub' Δ' Γ' → Set where
   ∙   : ∀ {Δ'} → Con'ᴹ ∙ {Δ'} ∙
   _,_ : ∀ {Γ' Δ' σ A} → Con'ᴹ Γ' {Δ'} σ → *ᴹ A → Con'ᴹ (Γ' ,*) (σ , A)
-
-postulate
-  coe-Con'ᴹ-∙ :
-    ∀ (Γ' : I → Con') → coe (⟨ i ⟩ Con'ᴹ ∙ {Γ' i} ∙) ∙ ↦ ∙
-  coe-Con'ᴹ-, :
-    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → Sub' (Δ' i) (Γ' i))(A : ∀ i → Ty (Δ' i))
-      (σ : Con'ᴹ (Γ' ₀) {Δ' ₀} (σ' ₀))(Aᴹ : *ᴹ (A ₀))
-    → coe (⟨ i ⟩ Con'ᴹ (Γ' i ,*) (σ' i , A i)) (σ , Aᴹ)
-    ↦ coe (⟨ i ⟩ Con'ᴹ (Γ' i) (σ' i)) σ , coe (⟨ i ⟩ *ᴹ (A i)) Aᴹ
-
-{-# REWRITE coe-Con'ᴹ-∙ coe-Con'ᴹ-, #-}
 
 Con'ᴹₑ : ∀ {Γ' Δ' σ' Σ'} δ' → Con'ᴹ Γ' {Δ'} σ' → Con'ᴹ Γ' {Σ'} (σ' ₛ∘'ₑ δ')
 Con'ᴹₑ δ' ∙          = ∙
@@ -100,26 +78,26 @@ Tyᴹ {Γ'} (∀' A) {Δ'} Δ σ' σ'ᴹ = con
 
 Con'ᴹ-idₑ : ∀ {Γ' Δ' σ'}(σ'ᴹ : Con'ᴹ Γ' {Δ'} σ') → coe (Con'ᴹ Γ' & idr'ₛₑ σ') (Con'ᴹₑ id'ₑ σ'ᴹ) ≡ σ'ᴹ
 Con'ᴹ-idₑ ∙          = refl
-Con'ᴹ-idₑ {Δ' = Δ'} (_,_ {Γ'} {σ = σ} {A} σ'ᴹ Aᴹ) =
-  _,_ & Con'ᴹ-idₑ σ'ᴹ ⊗
-  ext λ Σ' → ext λ Σ → ext λ δ' →
-    uñ (uncoe (⟨ i ⟩ Cand Σ (Tyₑ δ' (Ty-idₑ A $ i))) _ ⁻¹̃
-      ◾̃ uncoe (Cand Σ & (Ty-∘ₑ id'ₑ δ' A ⁻¹)) _ ⁻¹̃
-      ◾̃ sub̃ (λ x → Cand Σ (Tyₑ x A)) (Aᴹ Σ' Σ) (idl'ₑ δ'))
+Con'ᴹ-idₑ {Δ' = Δ'} (_,_ {Γ'} {σ = σ} {A} σ'ᴹ Aᴹ) = {!!}
+  -- _,_ & Con'ᴹ-idₑ σ'ᴹ ⊗
+  -- ext λ Σ' → ext λ Σ → ext λ δ' →
+  --   uñ (uncoe (⟨ i ⟩ Cand Σ (Tyₑ δ' (Ty-idₑ A $ i))) _ ⁻¹̃
+  --     ◾̃ uncoe (Cand Σ & (Ty-∘ₑ id'ₑ δ' A ⁻¹)) _ ⁻¹̃
+  --     ◾̃ sub̃ (λ x → Cand Σ (Tyₑ x A)) (Aᴹ Σ' Σ) (idl'ₑ δ'))
 
 Con'ᴹ-∘ₑ :
   ∀ {Γ' Δ' Σ' Ξ'} σ' δ' (ν' : OPE' Ξ' Σ') σ'ᴹ
   → coe (Con'ᴹ Γ' & (ass'ₛₑₑ σ' δ' ν' ⁻¹)) (Con'ᴹₑ {Γ'}{Δ'}{σ'}{Ξ'} (δ' ∘'ₑ ν') σ'ᴹ)
   ≡ Con'ᴹₑ ν' (Con'ᴹₑ δ' σ'ᴹ)
 Con'ᴹ-∘ₑ .∙       δ' ν' ∙          = refl
-Con'ᴹ-∘ₑ .(_ , A) δ' ν' (_,_ {A = A} σ'ᴹ Aᴹ) = 
-  _,_ & Con'ᴹ-∘ₑ _ δ' ν' σ'ᴹ ⊗
-   ext λ Σ' → ext λ Σ → ext λ ε
-   → uñ (uncoe (⟨ i ⟩ Cand Σ (Tyₑ ε (Ty-∘ₑ δ' ν' A $ 1- i))) _ ⁻¹̃
-        ◾̃ uncoe (Cand Σ & (Ty-∘ₑ (δ' ∘'ₑ ν') ε A ⁻¹)) _ ⁻¹̃
-        ◾̃ sub̃ (λ x → Cand Σ (Tyₑ x A)) (Aᴹ Σ' Σ) (ass'ₑ δ' ν' ε)
-        ◾̃ uncoe (⟨ i ⟩ Cand Σ (Ty-∘ₑ δ' (ν' ∘'ₑ ε) A $ 1- i)) _
-        ◾̃ uncoe (⟨ i ⟩ Cand Σ (Ty-∘ₑ ν' ε (Tyₑ δ' A) $ (1- i))) _)
+Con'ᴹ-∘ₑ .(_ , A) δ' ν' (_,_ {A = A} σ'ᴹ Aᴹ) = {!!}
+  -- _,_ & Con'ᴹ-∘ₑ _ δ' ν' σ'ᴹ ⊗
+  --  ext λ Σ' → ext λ Σ → ext λ ε
+  --  → uñ (uncoe (⟨ i ⟩ Cand Σ (Tyₑ ε (Ty-∘ₑ δ' ν' A $ 1- i))) _ ⁻¹̃
+  --       ◾̃ uncoe (Cand Σ & (Ty-∘ₑ (δ' ∘'ₑ ν') ε A ⁻¹)) _ ⁻¹̃
+  --       ◾̃ sub̃ (λ x → Cand Σ (Tyₑ x A)) (Aᴹ Σ' Σ) (ass'ₑ δ' ν' ε)
+  --       ◾̃ uncoe (⟨ i ⟩ Cand Σ (Ty-∘ₑ δ' (ν' ∘'ₑ ε) A $ 1- i)) _
+  --       ◾̃ uncoe (⟨ i ⟩ Cand Σ (Ty-∘ₑ ν' ε (Tyₑ δ' A) $ (1- i))) _)
 
 OPE'ᴹ : ∀ {Γ' Δ'}(σ' : OPE' Γ' Δ') → ∀ {Σ' δ'} → Con'ᴹ Γ' {Σ'} δ' → Con'ᴹ Δ' {Σ'} (σ' ₑ∘'ₛ δ')
 OPE'ᴹ ∙         {Σ'}  δ'ᴹ       = δ'ᴹ
@@ -128,7 +106,7 @@ OPE'ᴹ (keep σ') {Σ'} (δ'ᴹ , Aᴹ) = OPE'ᴹ σ' δ'ᴹ , Aᴹ
 
 OPE'ᴹ-idₑ : ∀ {Γ' Δ' σ'}(σ'ᴹ : Con'ᴹ Γ' {Δ'} σ') → coe (Con'ᴹ Γ' & idl'ₑₛ σ') (OPE'ᴹ id'ₑ σ'ᴹ) ≡ σ'ᴹ
 OPE'ᴹ-idₑ ∙          = refl
-OPE'ᴹ-idₑ (σ'ᴹ , Aᴹ) = (_, Aᴹ) & OPE'ᴹ-idₑ σ'ᴹ
+OPE'ᴹ-idₑ (σ'ᴹ , Aᴹ) = {!!} -- (_, Aᴹ) & OPE'ᴹ-idₑ σ'ᴹ
 
 --------------------------------------------------------------------------------
 
@@ -144,13 +122,13 @@ Tyᴹₑ :
 Tyᴹₑ {A = var v} δ aᴹ = *∈ᴹₑ {v = v} δ aᴹ
 
 Tyᴹₑ {Γ'} {A ⇒ B} {σ' = σ'} {σ'ᴹ} {δ' = δ'} δ tᴹ {Σ'} {Σ} {ν'} ν aᴹ = 
-  coe (apd2' (ass'ₛₑₑ σ' δ' ν' ⁻¹) (λ x y → Tyᴹ B Σ x y .S) (Con'ᴹ-∘ₑ σ' δ' ν' σ'ᴹ))
+  coe (ap2 (ass'ₛₑₑ σ' δ' ν' ⁻¹) (λ x y → Tyᴹ B Σ x y .S) (Con'ᴹ-∘ₑ σ' δ' ν' σ'ᴹ))
     (tᴹ (δ ∘ₑ ν)
-    (coe ((apd2' (ass'ₛₑₑ σ' δ' ν' ⁻¹) (λ x y → Tyᴹ A Σ x y .S) (Con'ᴹ-∘ₑ σ' δ' ν' σ'ᴹ)) ⁻¹)
+    (coe ((ap2 (ass'ₛₑₑ σ' δ' ν' ⁻¹) (λ x y → Tyᴹ A Σ x y .S) (Con'ᴹ-∘ₑ σ' δ' ν' σ'ᴹ)) ⁻¹)
       aᴹ))
 
-Tyᴹₑ {A = ∀' A } {σ' = σ'} {σ'ᴹ} {δ' = δ'} δ tᴹ {Ξ'} {Ξ} {ν'} ν B Bᴹ =
-  coe (apd2' (ass'ₛₑₑ σ' δ' ν' ⁻¹) (λ x y → Tyᴹ A Ξ (x , B) (y , Bᴹ) .S) (Con'ᴹ-∘ₑ σ' δ' ν' σ'ᴹ))
+Tyᴹₑ {A = ∀' A } {σ' = σ'} {σ'ᴹ} {δ' = δ'} δ tᴹ {Ξ'} {Ξ} {ν'} ν B Bᴹ = 
+  coe (ap2 (ass'ₛₑₑ σ' δ' ν' ⁻¹) (λ x y → Tyᴹ A Ξ (x , B) (y , Bᴹ) .S) (Con'ᴹ-∘ₑ σ' δ' ν' σ'ᴹ))
     (tᴹ (δ ∘ₑ ν) B Bᴹ)
 
 --------------------------------------------------------------------------------
@@ -159,23 +137,8 @@ Tyₑᴹ :
   ∀ {Γ'} A {Δ' Σ'} Σ δ' {σ'} σ'ᴹ
   → Tyᴹ {Δ'} (Tyₑ {Γ'} δ' A) {Σ'} Σ σ' σ'ᴹ .S ≡ Tyᴹ A Σ (δ' ₑ∘'ₛ σ') (OPE'ᴹ δ' σ'ᴹ) .S
 Tyₑᴹ {Γ'} (var v) {Δ'} {Σ'} Σ δ' {σ'} σ'ᴹ = {!!}
-Tyₑᴹ {Γ'} (A ⇒ B) {Δ'} {Σ'} Σ δ' {σ'} σ'ᴹ =
-  {!⟨ i ⟩ (∀ {Ξ'}{Ξ}{ε'} → OPE {Ξ'}{Σ'} ε' Ξ Σ
-
-    → Tyₑᴹ A Ξ δ' (Con'ᴹₑ ε' σ'ᴹ) $ i
-    → Tyₑᴹ B Ξ δ' (Con'ᴹₑ ε' σ'ᴹ) $ i
-  
-    -- → Tyᴹ (Tyₑ δ' A) Ξ (σ' ₛ∘'ₑ ε') (Con'ᴹₑ ε' σ'ᴹ) .S
-    -- → Tyᴹ (Tyₑ δ' B) Ξ (σ' ₛ∘'ₑ ε') (Con'ᴹₑ ε' σ'ᴹ) .S
-    
-    )
-
-   !}
+Tyₑᴹ {Γ'} (A ⇒ B) {Δ'} {Σ'} Σ δ' {σ'} σ'ᴹ = {!!}
 Tyₑᴹ {Γ'} (∀' A)  {Δ'} {Σ'} Σ δ' {σ'} σ'ᴹ = {!!}
-
-
-
--- Tyᴹ (Tyₑ wk' B) Δ (σ , A) (σ'ᴹ , x) .S
 
 --------------------------------------------------------------------------------
 

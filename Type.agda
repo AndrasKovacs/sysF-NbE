@@ -1,4 +1,4 @@
-{-# OPTIONS --type-in-type --rewriting #-}
+{-# OPTIONS --without-K #-}
 
 module Type where
 
@@ -7,6 +7,7 @@ open import Lib
 infixr 6 _∘'ₑ_
 infixr 6 _ₑ∘'ₛ_ _ₛ∘'ₑ_ _∘'ₛ_
 infixr 3 _⇒_
+infixr 5 _,_
 
 -- Type syntax
 --------------------------------------------------------------------------------
@@ -19,26 +20,10 @@ data *∈ : Con' → Set where
   vz : ∀ {Γ} → *∈ (Γ ,*)
   vs : ∀ {Γ} → *∈ Γ → *∈ (Γ ,*)
 
-postulate
-  coe-vz' : (Γ : I → Con') → coe (⟨ i ⟩ *∈ (Γ i ,*)) vz ↦ vz
-  coe-vs' : ∀ (Γ : I → Con') v → coe (⟨ i ⟩ *∈ (Γ i ,*)) (vs v) ↦ vs (coe (⟨ i ⟩ *∈ (Γ i)) v)
-
-{-# REWRITE coe-vz' coe-vs' #-}
-
 data Ty (Γ : Con') : Set where
   var : *∈ Γ → Ty Γ
   _⇒_ : Ty Γ → Ty Γ → Ty Γ
   ∀'  : Ty (Γ ,*) → Ty Γ
-
-postulate
-  coe-var :
-    ∀ (Γ : I → Con') v → coe (⟨ i ⟩ Ty (Γ i)) (var v) ↦ var (coe (⟨ i ⟩ *∈ (Γ i)) v)
-  coe-_⇒_ :
-    ∀ (Γ : I → Con') A B → coe (⟨ i ⟩ Ty (Γ i)) (A ⇒ B) ↦ (coe (⟨ i ⟩ Ty (Γ i)) A ⇒ coe (⟨ i ⟩ Ty (Γ i)) B)
-  coe-∀' :
-    ∀ (Γ : I → Con') (A : Ty (Γ ₀ ,*)) → coe (⟨ i ⟩ Ty (Γ i)) (∀' A) ↦ ∀' (coe (⟨ i ⟩ Ty (Γ i ,*)) A)
-
-{-# REWRITE coe-var coe-_⇒_ coe-∀' #-}
 
 -- Type embedding
 --------------------------------------------------------------------------------
@@ -47,14 +32,6 @@ data OPE' : Con' → Con' → Set where
   ∙    : OPE' ∙ ∙
   drop : ∀ {Γ Δ} → OPE' Γ Δ → OPE' (Γ ,*) Δ
   keep : ∀ {Γ Δ} → OPE' Γ Δ → OPE' (Γ ,*) (Δ ,*)
-
-postulate
-  coe-Ty-drop :
-    ∀ (Γ Δ : I → Con') σ → coe (⟨ i ⟩ OPE' (Γ i ,*) (Δ i)) (drop σ) ↦ drop (coe (⟨ i ⟩ OPE' (Γ i) (Δ i)) σ)
-  coe-Ty-keep :
-    ∀ (Γ Δ : I → Con') σ → coe (⟨ i ⟩ OPE' (Γ i ,*) (Δ i ,*)) (keep σ) ↦ keep (coe (⟨ i ⟩ OPE' (Γ i) (Δ i)) σ)
-
-{-# REWRITE coe-Ty-drop coe-Ty-keep #-}
 
 id'ₑ : ∀ {Γ} → OPE' Γ Γ
 id'ₑ {∙}    = ∙
@@ -127,15 +104,6 @@ data Sub' (Γ : Con') : Con' → Set where
   ∙   : Sub' Γ ∙
   _,_ : ∀ {Δ} → Sub' Γ Δ → Ty Γ → Sub' Γ (Δ ,*)
 
-postulate
-  coe-Sub'-∙ :
-    (Γ : I → Con') → coe (⟨ i ⟩ Sub' (Γ i) ∙) ∙ ↦ ∙
-  coe-Sub'-, :
-    ∀ (Γ Δ : I → Con') σ A
-    → coe (⟨ i ⟩ Sub' (Γ i) (Δ i ,*)) (σ , A) ↦ coe (⟨ i ⟩ Sub' (Γ i) (Δ i)) σ , coe (⟨ i ⟩ Ty (Γ i)) A
-
-{-# REWRITE coe-Sub'-∙ coe-Sub'-, #-}
-
 _ₛ∘'ₑ_ : ∀ {Γ Δ Σ} → Sub' Δ Σ → OPE' Γ Δ → Sub' Γ Σ
 ∙       ₛ∘'ₑ δ = ∙
 (σ , A) ₛ∘'ₑ δ = (σ ₛ∘'ₑ δ) , Tyₑ δ A
@@ -143,7 +111,7 @@ _ₛ∘'ₑ_ : ∀ {Γ Δ Σ} → Sub' Δ Σ → OPE' Γ Δ → Sub' Γ Σ
 _ₑ∘'ₛ_ : ∀ {Γ Δ Σ} → OPE' Δ Σ → Sub' Γ Δ → Sub' Γ Σ
 ∙      ₑ∘'ₛ δ       = δ
 drop σ ₑ∘'ₛ (δ , A) = σ ₑ∘'ₛ δ
-keep σ ₑ∘'ₛ (δ , A) = σ ₑ∘'ₛ δ , A
+keep σ ₑ∘'ₛ (δ , A) = (σ ₑ∘'ₛ δ) , A
 
 drop'ₛ : ∀ {Γ Δ} → Sub' Γ Δ → Sub' (Γ ,*) Δ
 drop'ₛ σ = σ ₛ∘'ₑ wk'
@@ -229,7 +197,7 @@ emb'ₑ (keep σ) = keep'ₛ (emb'ₑ σ)
 idr'ₑₛ : ∀ {Γ Δ}(σ : OPE' Γ Δ) → σ ₑ∘'ₛ id'ₛ ≡ emb'ₑ σ
 idr'ₑₛ ∙        = refl
 idr'ₑₛ (drop σ) = ass'ₑₛₑ σ id'ₛ wk' ⁻¹ ◾ (_ₛ∘'ₑ wk') & idr'ₑₛ σ
-idr'ₑₛ (keep σ) = (_, var vz) & (ass'ₑₛₑ σ id'ₛ wk' ⁻¹ ◾ (_ₛ∘'ₑ wk') & idr'ₑₛ σ)
+idr'ₑₛ (keep σ) = _,_ & (ass'ₑₛₑ σ id'ₛ wk' ⁻¹ ◾ (_ₛ∘'ₑ wk') & idr'ₑₛ σ) ⊗ refl
 
 idl'ₛₑ : ∀ {Γ Δ}(σ : OPE' Γ Δ) → id'ₛ ₛ∘'ₑ σ ≡ emb'ₑ σ
 idl'ₛₑ ∙        = refl
@@ -261,7 +229,7 @@ ass'ₛₛₑ (σ , A) δ ν = _,_ & ass'ₛₛₑ σ δ ν ⊗ Ty-ₛ∘ₑ δ 
 
 idl'ₑₛ : ∀ {Γ Δ}(σ : Sub' Γ Δ) → id'ₑ ₑ∘'ₛ σ ≡ σ
 idl'ₑₛ ∙       = refl
-idl'ₑₛ (σ , A) = (_, A) & idl'ₑₛ σ
+idl'ₑₛ (σ , A) = _,_ & idl'ₑₛ σ ⊗ refl
 
 *∈-∘ₛ : ∀ {Γ Δ Σ}(σ : Sub' Δ Σ)(δ : Sub' Γ Δ) v → Tyₛ δ (*∈ₛ σ v) ≡ *∈ₛ (σ ∘'ₛ δ) v
 *∈-∘ₛ (σ , A) δ vz     = refl

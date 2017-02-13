@@ -1,4 +1,4 @@
-{-# OPTIONS --type-in-type --rewriting #-}
+{-# OPTIONS --without-K #-}
 
 module Term where
 
@@ -10,18 +10,8 @@ open import Type
 
 data Con : Con' → Set where
   ∙    : Con ∙
-  _,_  : ∀ {Δ} → Con Δ → Ty Δ → Con Δ
-  _,*  : ∀ {Δ} → Con Δ → Con (Δ ,*)
-
-postulate
-  coe-Con-, :
-    ∀ (Δ : I → Con') σ A
-    → coe (⟨ i ⟩ Con (Δ i)) (σ , A) ↦ coe (⟨ i ⟩ Con (Δ i)) σ  , coe (⟨ i ⟩ Ty (Δ i)) A
-  coe-Con-,* :
-    ∀ (Δ : I → Con') σ
-    → coe (⟨ i ⟩ Con (Δ i ,*)) (σ ,*) ↦ coe (⟨ i ⟩ Con (Δ i)) σ  ,*
-
-{-# REWRITE coe-Con-, coe-Con-,* #-}
+  _,_  : ∀ {Γ'} → Con Γ' → Ty Γ' → Con Γ'
+  _,*  : ∀ {Γ'} → Con Γ' → Con (Γ' ,*)
 
 infix 3 _∈_
 data _∈_ : ∀ {Δ} (A : Ty Δ) → Con Δ → Set where
@@ -29,48 +19,12 @@ data _∈_ : ∀ {Δ} (A : Ty Δ) → Con Δ → Set where
   vs  : ∀ {Δ}{A : Ty Δ}{B Γ} → A ∈ Γ → A ∈ (Γ , B)
   vs* : ∀ {Δ}{A : Ty Δ}{Γ}   → A ∈ Γ → Tyₑ wk' A ∈ (Γ ,*)
 
-postulate
-  coe-∈-vz :
-    ∀ (Δ : I → Con')(A : ∀ i → Ty (Δ i))(Γ : ∀ i → Con (Δ i))
-    → coe (⟨ i ⟩ (A i ∈ (Γ i , A i))) vz ↦ vz
-  coe-∈-vs :
-    ∀ (Δ : I → Con')(A B : ∀ i → Ty (Δ i))(Γ : ∀ i → Con (Δ i)) (v : A ₀ ∈ Γ ₀)
-    → coe (⟨ i ⟩ (A i ∈ (Γ i , B i))) (vs v) ↦ vs (coe (⟨ i ⟩ (A i ∈ Γ i)) v)
-  coe-∈-vs* :
-    ∀ (Δ : I → Con')(A : ∀ i → Ty (Δ i))(Γ : ∀ i → Con (Δ i)) (v : A ₀ ∈ Γ ₀)
-    → coe (⟨ i ⟩ (Tyₑ wk' (A i) ∈ (Γ i ,*))) (vs* v) ↦ vs* (coe (⟨ i ⟩ (A i ∈ Γ i)) v)
-
-{-# REWRITE coe-∈-vz coe-∈-vs coe-∈-vs* #-}
-
 data Tm {Δ} (Γ : Con Δ) : Ty Δ → Set where
   var  : ∀ {A} → A ∈ Γ → Tm Γ A
   lam  : ∀ {A B} → Tm (Γ , A) B → Tm Γ (A ⇒ B)
   app  : ∀ {A B} → Tm Γ (A ⇒ B) → Tm Γ A → Tm Γ B
   tlam : ∀ {A} → Tm (Γ ,*) A → Tm Γ (∀' A)
   tapp : ∀ {A} → Tm Γ (∀' A) → (B : Ty Δ) → Tm Γ (Tyₛ (id'ₛ , B) A)
-
-postulate
-  coe-Tm-var :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i)) v
-    → coe (⟨ i ⟩ Tm (Γ i) (A i)) (var v) ↦ var (coe (⟨ i ⟩ (A i ∈ Γ i)) v)
-  coe-Tm-lam :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A B  : ∀ i → Ty (Γ' i)) t
-    → coe (⟨ i ⟩ Tm (Γ i) (A i ⇒ B i)) (lam t) ↦ lam (coe (⟨ i ⟩ Tm (Γ i , A i) (B i)) t)
-  coe-Tm-app :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i)) (A : Ty (Γ' ₀))(B : ∀ i → Ty (Γ' i)) (f : Tm (Γ ₀) (A ⇒ B ₀)) x
-    → coe (⟨ i ⟩ Tm (Γ i) (B i)) (app f x)
-    ↦ app
-        (coe (⟨ i ⟩ Tm (Γ i) (coe (⟨ j ⟩ Ty (Γ' (j [ ₀ - i ]))) A ⇒ B i)) f)
-        (coe (⟨ i ⟩ Tm (Γ i) (coe (⟨ j ⟩ Ty (Γ' (j [ ₀ - i ]))) A)) x)
-  coe-Tm-tlam :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i ,*)) t
-    → coe (⟨ i ⟩ Tm (Γ i) (∀' (A i))) (tlam t) ↦ tlam (coe (⟨ i ⟩ Tm (Γ i ,*) (A i)) t)
-  coe-Tm-tapp :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i)) (B : ∀ i → Ty (Γ' i))(A : ∀ i → Ty (Γ' i ,*)) t
-    → coe (⟨ i ⟩ Tm (Γ i) (Tyₛ (id'ₛ , B i) (A i))) (tapp {Γ' ₀}{Γ ₀}{A ₀} t (B ₀))
-    ↦ tapp {Γ' ₁}{Γ ₁}{A ₁} (coe (⟨ i ⟩ Tm (Γ i) (∀' (A i))) t) (B ₁)
-
-{-# REWRITE coe-Tm-var coe-Tm-lam coe-Tm-app coe-Tm-tlam coe-Tm-tapp #-}
 
 -- Term embedding
 --------------------------------------------------------------------------------
@@ -81,30 +35,6 @@ data OPE : ∀ {Γ Δ} → OPE' Γ Δ → Con Γ → Con Δ → Set where
   keep' : ∀ {Γ Δ σ δ ν}   → OPE {Γ}{Δ} σ δ ν → OPE (keep σ) (δ ,*)         (ν ,*)
   drop  : ∀ {Γ Δ σ δ ν A} → OPE {Γ}{Δ} σ δ ν → OPE σ        (δ , A)        ν
   keep  : ∀ {Γ Δ σ δ ν A} → OPE {Γ}{Δ} σ δ ν → OPE σ        (δ , Tyₑ σ A) (ν , A)
-
-postulate
-  coe-OPE-drop' :
-    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
-      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))
-    → coe (⟨ i ⟩ OPE (drop (σ' i)) (Γ i ,*) (Δ i)) (drop' σ)
-    ↦ drop' (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
-  coe-OPE-keep' :
-    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
-      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))
-    → coe (⟨ i ⟩ OPE (keep (σ' i)) (Γ i ,*) (Δ i ,*)) (keep' σ)
-    ↦ keep' (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
-  coe-OPE-drop :
-    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
-      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))(A : ∀ i → Ty (Γ' i))
-    → coe (⟨ i ⟩ OPE (σ' i) (Γ i , A i) (Δ i)) (drop σ)
-    ↦ drop (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
-  coe-OPE-keep :
-    ∀ (Γ' Δ' : I → Con')(σ' : ∀ i → OPE' (Γ' i) (Δ' i))(Γ : ∀ i → Con (Γ' i))(Δ : ∀ i → Con (Δ'  i))
-      (σ : OPE {Γ' ₀}{Δ' ₀} (σ' ₀) (Γ ₀) (Δ ₀))(A : ∀ i → Ty (Δ' i))
-    → coe (⟨ i ⟩ OPE (σ' i) (Γ i , Tyₑ (σ' i) (A i)) (Δ i , A i)) (keep σ)
-    ↦ keep (coe (⟨ i ⟩ OPE (σ' i) (Γ i) (Δ i)) σ)
-
-{-# REWRITE coe-OPE-drop' coe-OPE-keep' coe-OPE-drop  coe-OPE-keep #-}
 
 OPE'-of : ∀ {Γ' Δ' σ' Γ Δ} → OPE {Γ'}{Δ'} σ' Γ Δ → OPE' Γ' Δ'
 OPE'-of {σ' = σ'} _ = σ'
@@ -177,32 +107,6 @@ mutual
     var  : ∀ {A} → A ∈ Δ → Ne Δ A
     app  : ∀ {A B} → Ne Δ (A ⇒ B) → Nf Δ A → Ne Δ B
     tapp : ∀ {A} → Ne Δ (∀' A) → (B : Ty Γ) → Ne Δ (Tyₛ (id'ₛ , B) A)
-
-postulate
-  coe-Nf-lam :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A B  : ∀ i → Ty (Γ' i)) t
-    → coe (⟨ i ⟩ Nf (Γ i) (A i ⇒ B i)) (lam t) ↦ lam (coe (⟨ i ⟩ Nf (Γ i , A i) (B i)) t)
-  coe-Nf-tlam :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i ,*)) t
-    → coe (⟨ i ⟩ Nf (Γ i) (∀' (A i))) (tlam t) ↦ tlam (coe (⟨ i ⟩ Nf (Γ i ,*) (A i)) t)
-  coe-Nf-ne :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(v : ∀ i → *∈ (Γ' i)) n
-    → coe (⟨ i ⟩ Nf (Γ i) (var (v i))) (ne n) ↦ ne (coe (⟨ i ⟩ Ne (Γ i) (var (v i))) n)
-  coe-Ne-var :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i))(A : ∀ i → Ty (Γ' i)) v
-    → coe (⟨ i ⟩ Ne (Γ i) (A i)) (var v) ↦ var (coe (⟨ i ⟩ (A i ∈ Γ i)) v)
-  coe-Ne-app :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i)) (A : Ty (Γ' ₀))(B : ∀ i → Ty (Γ' i)) (f : Ne (Γ ₀) (A ⇒ B ₀)) x
-    → coe (⟨ i ⟩ Ne (Γ i) (B i)) (app f x)
-    ↦ app
-        (coe (⟨ i ⟩ Ne (Γ i) (coe (⟨ j ⟩ Ty (Γ' (j [ ₀ - i ]))) A ⇒ B i)) f)
-        (coe (⟨ i ⟩ Nf (Γ i) (coe (⟨ j ⟩ Ty (Γ' (j [ ₀ - i ]))) A)) x)
-  coe-Ne-tapp :
-    ∀ (Γ' : I → Con')(Γ : ∀ i → Con (Γ' i)) (B : ∀ i → Ty (Γ' i))(A : ∀ i → Ty (Γ' i ,*)) t
-    → coe (⟨ i ⟩ Ne (Γ i) (Tyₛ (id'ₛ , B i) (A i))) (tapp {Γ' ₀}{Γ ₀}{A ₀} t (B ₀))
-    ↦ tapp {Γ' ₁}{Γ ₁}{A ₁} (coe (⟨ i ⟩ Ne (Γ i) (∀' (A i))) t) (B ₁)
-
-{-# REWRITE coe-Nf-lam coe-Nf-tlam coe-Nf-ne coe-Ne-var coe-Ne-app coe-Ne-tapp #-}
 
 tappₙₑ : ∀ {Γ}{Δ : Con Γ}{A} → Ne Δ (∀' A) → (B : Ty Γ) → Ne Δ (Tyₛ (id'ₛ , B) A)
 tappₙₑ = tapp

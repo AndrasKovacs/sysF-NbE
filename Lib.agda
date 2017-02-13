@@ -1,19 +1,72 @@
-{-# OPTIONS --rewriting --type-in-type #-}
 
 module Lib where
 
-open import Cubes public
+open import Level
 
 --------------------------------------------------------------------------------
 
-infix 3 _∋_
-_∋_ : (A : Set) → A → A
-A ∋ a = a
+id : ∀ {α}{A : Set α} → A → A
+id a = a
 
-_∘_ : ∀ {A : Set} {B : A → Set} {C : {x : A} → B x → Set} →
+infixr 9 _∘_
+_∘_ : ∀ {a b c}
+        {A : Set a} {B : A → Set b} {C : {x : A} → B x → Set c} →
         (∀ {x} (y : B x) → C y) → (g : (x : A) → B x) →
         ((x : A) → C (g x))
 f ∘ g = λ x → f (g x)
+
+infixl 0 _∋_
+_∋_ : ∀ {a} (A : Set a) → A → A
+A ∋ x = x
+
+-- Eq
+--------------------------------------------------------------------------------
+
+infix 4 _≡_
+data _≡_ {a} {A : Set a} (x : A) : A → Set a where
+  refl : x ≡ x
+
+{-# BUILTIN EQUALITY _≡_ #-}
+{-# BUILTIN REFL refl #-}
+
+J : ∀{α β}{A : Set α}{a : A}(P : ∀ a' → a ≡ a' → Set β) → P a refl → ∀ {a'} (p : a ≡ a') → P a' p
+J P refl' refl = refl'
+
+coe : ∀ {α}{A B : Set α} → A ≡ B → A → B
+coe refl a = a
+
+infix 6 _⁻¹
+infixr 5 _◾_
+
+_⁻¹ : ∀ {α}{A : Set α}{a b : A} → a ≡ b → b ≡ a
+refl ⁻¹ = refl
+
+_◾_ : ∀ {α}{A : Set α}{a b c : A} → a ≡ b → b ≡ c → a ≡ c
+refl ◾ q = q
+
+eq-inv : ∀ {α}{A : Set α}{a b : A}(p : a ≡ b) → p ◾ p ⁻¹ ≡ refl
+eq-inv p = J (λ _ p → p ◾ p ⁻¹ ≡ refl) refl p
+
+infixl 9 _&_
+_&_ : ∀{α β}{A : Set α}{B : Set β}(f : A → B){x y : A} → x ≡ y → f x ≡ f y
+f & refl = refl
+
+postulate
+  ext : ∀{α β}{A : Set α}{B : A → Set β}{f g : ∀ a → B a} → (∀ a → f a ≡ g a) → f ≡ g
+  exti :
+    ∀ {α}{β}{A : Set α}{B : A → Set β}{f g : ∀ {a} → B a}
+    → (∀ a → f {a} ≡ g {a}) → (λ {x} → f {x}) ≡ (λ {x} → g {x})
+
+infixl 8 _⊗_
+_⊗_ : ∀ {α}{A B : Set α}{f g : A → B}(p : f ≡ g){a a' : A}(q : a ≡ a') → f a ≡ g a'
+refl ⊗ refl = refl
+
+ap2 :
+  ∀{α β γ}{A : Set α}{a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
+  {B : A → Set β}{C : Set γ}
+  (f : ∀ a → B a → C){b₀ : B a₀}{b₁ : B a₁}
+  (b₂ : coe (B & a₂) b₀ ≡ b₁) → f a₀ b₀ ≡ f a₁ b₁
+ap2 refl f refl = refl
 
 --------------------------------------------------------------------------------
 
@@ -35,16 +88,6 @@ _×_ : Set → Set → Set
 A × B = Σ A λ _ → B
 infixr 4 _×_
 
-postulate
-  coe-Σ :
-    (A : I → Set)(B : ∀ i → A i → Set)
-    → coe (⟨ i ⟩ (Σ (A i) (B i))) ↦ (λ (p : Σ (A ₀) (B ₀)) → 
-       ((coe (path A) (proj₁ p)) ,
-       coe (⟨ i ⟩ B i (coe (⟨ j ⟩ A (j [ ₀ - i ])) (proj₁ p))) (proj₂ p)))
-{-# REWRITE coe-Σ #-}       
-
---------------------------------------------------------------------------------
-
 record ⊤ : Set where
   constructor tt
 
@@ -55,32 +98,29 @@ data ⊥ : Set where
 
 -- HEq
 --------------------------------------------------------------------------------
-record _≅_ {A B : Set}(a : A)(b : B) : Set where
-  constructor con
+record _≅_ {α}{A B : Set α}(a : A)(b : B) : Set (suc α) where
   field
     ty : A ≡ B
     tm : coe ty a ≡ b
 open _≅_ public
 
-uncoe : ∀ {A B}(p : A ≡ B) a → a ≅ coe p a
-uncoe p a = con p refl
+uncoe : ∀ {α}{A B : Set α}(p : A ≡ B) a → a ≅ coe p a
+uncoe p a = record {ty = p; tm = refl}
 
-refl̃ : ∀ {A}{a : A} → a ≅ a
-refl̃ = con refl refl
+pattern refl̃ = record {ty = refl; tm = refl}
 
-infix 5 _⁻¹̃ 
-_⁻¹̃ : ∀ {A B}{a : A}{b : B} → a ≅ b → b ≅ a
-_⁻¹̃ {A} {B} {a} {b} (con ty tm) =
-  con (ty ⁻¹) (coe (ty ⁻¹) & tm ⁻¹ ◾ (λ p → coe p a) & eq-inv ty)
+infix 6 _⁻¹̃ 
+_⁻¹̃ : ∀ {α}{A B : Set α}{a : A}{b : B} → a ≅ b → b ≅ a
+refl̃ ⁻¹̃ = refl̃
 
-infixr 4 _◾̃_ 
-_◾̃_ : ∀ {A B C}{a : A}{b : B}{c : C} → a ≅ b → b ≅ c → a ≅ c
-con ty tm ◾̃ con ty' tm' = con (ty ◾ ty') (coe ty' & tm ◾ tm')
+infixr 5 _◾̃_ 
+_◾̃_ : ∀ {α}{A B C : Set α}{a : A}{b : B}{c : C} → a ≅ b → b ≅ c → a ≅ c
+refl̃ ◾̃ q = q
 
-sub̃ : ∀ {A}(P : A → Set)(f : ∀ a → P a){a₀ a₁ : A}(a₂ : a₀ ≡ a₁) → f a₀ ≅ f a₁
-sub̃ P f a₂ = con (P & a₂) (⟨ i ⟩ coe (⟨ j ⟩ P (a₂ $ i [ j - ₁ ])) (f (a₂ $ i)))
+sub̃ : ∀ {α β}{A : Set α}(P : A → Set β)(f : ∀ a → P a){a₀ a₁ : A}(a₂ : a₀ ≡ a₁) → f a₀ ≅ f a₁
+sub̃ P f refl = refl̃
 
-uñ : ∀ {A}{a b : A} → a ≅ b → a ≡ b
-uñ (con ty tm) = tm
-
+-- TODO: disable K, require {{IsSet}} here
+uñ : ∀ {α}{A : Set α}{a b : A} → a ≅ b → a ≡ b
+uñ refl̃ = refl
 
