@@ -67,8 +67,8 @@ record Σ (A : Set) (B : A → Set) : Set where
   constructor _,_
   field
     proj₁ : A
-    proj₂ : B proj₁    
-open Σ public    
+    proj₂ : B proj₁
+open Σ public
 infixr 5 _,_
 
 ∃ : {A : Set} → (A → Set) → Set
@@ -105,11 +105,11 @@ pattern refl̃ = refl ~
 uncoe : ∀ {α}{A B : Set α}(p : B ≡ A) (b : B) → coe p b ≅ b
 uncoe refl a = refl̃
 
-infix 6 _⁻¹̃ 
+infix 6 _⁻¹̃
 _⁻¹̃ : ∀ {α}{A B : Set α}{a : A}{b : B} → a ≅ b → b ≅ a
 refl̃ ⁻¹̃ = refl̃
 
-infixr 5 _◾̃_ 
+infixr 5 _◾̃_
 _◾̃_ : ∀ {α}{A B C : Set α}{a : A}{b : B}{c : C} → a ≅ b → b ≅ c → a ≅ c
 refl̃ ◾̃ q = q
 
@@ -143,9 +143,9 @@ ap4̃ :
   {a₀ a₁ : A}                        (a₂ : a₀ ≡ a₁)
   {b₀ : B a₀}      {b₁ : B a₁}       (b₂ : b₀ ≅ b₁)
   {c₀ : C a₀ b₀}   {c₁ : C a₁ b₁}    (c₂ : c₀ ≅ c₁)
-  {d₀ : D a₀ b₀ c₀}{d₁ : D a₁ b₁ c₁} (d₂ : d₀ ≅ d₁)  
+  {d₀ : D a₀ b₀ c₀}{d₁ : D a₁ b₁ c₁} (d₂ : d₀ ≅ d₁)
   → f a₀ b₀ c₀ d₀ ≅ f a₁ b₁ c₁ d₁
-ap4̃ f refl refl̃ refl̃ refl̃ = refl̃    
+ap4̃ f refl refl̃ refl̃ refl̃ = refl̃
 
 uñ : ∀ {α}{A : Set α}{a b : A} → a ≅ b → a ≡ b
 uñ refl̃ = refl
@@ -184,4 +184,18 @@ ext̃ {A = A} {B₀} {B₁} {f₀} {f₁} f₂ =
         → f₀ ≅ f₁)
      (λ {f₀}{f₁} f₂ → ext (λ a → uñ (f₂ a)) ~)
      (ext (λ a → f₂ a .ty)) f₂
+
+extĩ :
+  ∀ {α β}
+    {A : Set α}
+    {B₀ B₁ : A → Set β}
+    {f₀ : ∀ {a} → B₀ a}{f₁ : ∀ {a} → B₁ a}
+  → (∀ a → f₀ {a} ≅ f₁ {a})
+  → (λ {a} → f₀ {a}) ≅ (λ {a} → f₁ {a})
+extĩ {A = A} {B₀} {B₁} {f₀} {f₁} f₂ =
+  J (λ B₁ (B₂ : B₀ ≡ B₁) → {f₀ : ∀ {a} → B₀ a}{f₁ : ∀ {a} → B₁ a}
+      → (∀ a → f₀ {a} ≅ f₁ {a})
+      → (λ {a} → f₀ {a}) ≅ (λ {a} → f₁ {a}))
+    (λ {f₀}{f₁} f₂ → exti (λ a → uñ (f₂ a)) ~)
+    (ext (λ a → f₂ a .ty)) f₂
 
