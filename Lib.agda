@@ -185,6 +185,16 @@ ext̃ {A = A} {B₀} {B₁} {f₀} {f₁} f₂ =
      (λ {f₀}{f₁} f₂ → ext (λ a → uñ (f₂ a)) ~)
      (ext (λ a → f₂ a .ty)) f₂
 
+ext̃' :
+  ∀ {α β}
+    {A₀ A₁ : Set α}
+    {B₀ : A₀ → Set β}{B₁ : A₁ → Set β}
+    {f₀ : ∀ a → B₀ a}{f₁ : ∀ a → B₁ a}
+  → A₀ ≡ A₁
+  → (∀ a₀ a₁ (a₂ : a₀ ≅ a₁) → f₀ a₀ ≅ f₁ a₁)
+  → f₀ ≅ f₁
+ext̃' {A₀ = A} {.A} {B₀} {B₁} {f₀} {f₁} refl f₂ = ext̃ (λ a → f₂ a a refl̃)
+
 extĩ :
   ∀ {α β}
     {A : Set α}
@@ -198,4 +208,14 @@ extĩ {A = A} {B₀} {B₁} {f₀} {f₁} f₂ =
       → (λ {a} → f₀ {a}) ≅ (λ {a} → f₁ {a}))
     (λ {f₀}{f₁} f₂ → exti (λ a → uñ (f₂ a)) ~)
     (ext (λ a → f₂ a .ty)) f₂
+
+extĩ' :
+  ∀ {α β}
+    {A₀ A₁ : Set α}
+    {B₀ : A₀ → Set β}{B₁ : A₁ → Set β}
+    {f₀ : ∀ {a} → B₀ a}{f₁ : ∀ {a} → B₁ a}
+  → A₀ ≡ A₁
+  → (∀ a₀ a₁ (a₂ : a₀ ≅ a₁) → f₀ {a₀} ≅ f₁ {a₁})
+  → (λ {a} → f₀ {a}) ≅ (λ {a} → f₁ {a})
+extĩ' {A₀ = A}{A₁ = .A} {B₀} {B₁} {f₀} {f₁} refl f₂ = extĩ (λ a → f₂ a a refl̃ )
 
