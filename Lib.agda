@@ -158,6 +158,16 @@ ap2 :
   → f a₀ b₀ ≡ f a₁ b₁
 ap2 f refl refl̃ = refl
 
+ap3 :
+  ∀ {α β γ δ}
+  {A : Set α}{B : A → Set β}{C : ∀ a (b : B a) → Set γ}{D : Set δ}
+  (f : ∀ a b (c : C a b) → D)
+  {a₀ a₁ : A}(a₂ : a₀ ≡ a₁)
+  {b₀ : B a₀}{b₁ : B a₁}(b₂ : b₀ ≅ b₁)
+  {c₀ : C a₀ b₀}{c₁ : C a₁ b₁}(c₂ : c₀ ≅ c₁)
+  → f a₀ b₀ c₀ ≡ f a₁ b₁ c₁
+ap3 f refl refl̃ refl̃ = refl
+
 Π-≡ :
   ∀ {α β}{A : Set α}{B₀ B₁ : A → Set β}
   → (B₂ : ∀ a → B₀ a ≡ B₁ a)

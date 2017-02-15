@@ -264,3 +264,8 @@ emb'-∘ₛ : ∀ {Γ Δ Σ}(σ : Sub' Δ Σ)(δ : OPE' Γ Δ) → σ ∘'ₛ em
 emb'-∘ₛ ∙       δ = refl
 emb'-∘ₛ (σ , A) δ = _,_ & emb'-∘ₛ σ δ ⊗ Ty-emb δ A
 
+idl'ₛ : ∀ {Γ Δ}(σ : Sub' Γ Δ) → id'ₛ ∘'ₛ σ ≡ σ
+idl'ₛ ∙       = refl
+idl'ₛ (σ , A) = (_, A) & (ass'ₛₑₛ id'ₛ wk' (σ , A)
+                       ◾ (id'ₛ ∘'ₛ_) & idl'ₑₛ σ ◾ idl'ₛ σ)
+

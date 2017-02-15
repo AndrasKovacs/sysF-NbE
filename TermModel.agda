@@ -25,8 +25,7 @@ Conᴹₑ δ (Γᴹ ,*) = Conᴹₑ δ Γᴹ ,*
 ∈ᴹ vz       σ'ᴹ      (Γᴹ , t) = t
 ∈ᴹ (vs v)   σ'ᴹ      (Γᴹ , t) = ∈ᴹ v σ'ᴹ Γᴹ
 ∈ᴹ (vs* {A = B} v) {Δ = Δ} (_,_ {σ' = σ'} {A} σ'ᴹ x) (Γᴹ ,*) =
-  coe (ap2 (λ x₁ y → Tyᴹ B Δ x₁ y .S) (idl'ₑₛ σ' ⁻¹) (OPE'ᴹ-idₑ σ'ᴹ ⁻¹̃)
-     ◾ Tyₑᴹ B Δ wk' (σ'ᴹ , x) ⁻¹)
+  coe (ap2 (λ x y → Tyᴹ B Δ x y .S) (idl'ₑₛ σ' ⁻¹) (OPE'ᴹ-id σ'ᴹ ⁻¹̃) ◾ Tyₑᴹ B Δ wk' (σ'ᴹ , x) ⁻¹)
     (∈ᴹ v σ'ᴹ Γᴹ)
 
 Tmᴹ : ∀ {Γ' Γ A} → Tm {Γ'} Γ A → ∀ {Δ' Δ σ'} σ'ᴹ → Conᴹ Γ Δ σ'ᴹ → Tyᴹ {Γ'} A {Δ'} Δ σ' σ'ᴹ .S
@@ -34,21 +33,16 @@ Tmᴹ (var v)    σ'ᴹ Γᴹ = ∈ᴹ v σ'ᴹ Γᴹ
 Tmᴹ (lam t)    σ'ᴹ Γᴹ = λ δ aᴹ → Tmᴹ t _ (Conᴹₑ δ Γᴹ , aᴹ)
 
 Tmᴹ {A = B} (app {A} f x) {Δ = Δ} {σ'} σ'ᴹ Γᴹ =
-  coe (ap2 (λ x₁ y → Tyᴹ B Δ x₁ y .S) (idr'ₛₑ σ') (Con'ᴹ-idₑ σ'ᴹ))
+  coe (ap2 (λ x y → Tyᴹ B Δ x y .S) (idr'ₛₑ σ') (Con'ᴹ-idₑ σ'ᴹ))
     (Tmᴹ f σ'ᴹ Γᴹ idₑ
-      (coe (ap2 (λ x₁ y → Tyᴹ A Δ x₁ y .S) (idr'ₛₑ σ' ⁻¹) (Con'ᴹ-idₑ σ'ᴹ ⁻¹̃))
-      (Tmᴹ x σ'ᴹ Γᴹ)))
+      (coe (ap2 (λ x y → Tyᴹ A Δ x y .S) (idr'ₛₑ σ' ⁻¹) (Con'ᴹ-idₑ σ'ᴹ ⁻¹̃))
+        (Tmᴹ x σ'ᴹ Γᴹ)))
 
-Tmᴹ (tlam t)   σ'ᴹ Γᴹ = λ δ B Bᴹ → Tmᴹ t (_ , Bᴹ) (Conᴹₑ δ Γᴹ ,*)
+Tmᴹ (tlam t) σ'ᴹ Γᴹ = λ δ B Bᴹ → Tmᴹ t (_ , Bᴹ) (Conᴹₑ δ Γᴹ ,*)
 
 Tmᴹ (tapp {A} t B) {Δ = Δ} {σ'} σ'ᴹ Γᴹ =
-  coe cheat
-    (Tmᴹ t σ'ᴹ Γᴹ idₑ (Tyₛ σ' B)
-      (con (λ Σ' Σ δ' → coe (Cand Σ & (Ty-ₛ∘ₑ σ' δ' B ⁻¹)) (Tyᴹ B Σ _ (Con'ᴹₑ δ' σ'ᴹ)))
-           (λ {Σ'}{Σ}{δ'}{Ξ'} Ξ ν' ν x →
-             coe ( (ap2 (λ x₁ y → Tyᴹ B Ξ x₁ y .S) (ass'ₛₑₑ σ' δ' ν') (Con'ᴹ-∘ₑ δ' ν' σ'ᴹ ⁻¹̃))
-                 ◾ (S & coe-CandΓ (Ty-ₛ∘ₑ σ' (δ' ∘'ₑ ν') B ⁻¹) (Tyᴹ B Ξ _ (Con'ᴹₑ (δ' ∘'ₑ ν') σ'ᴹ)) ⁻¹))
-                 (Tyᴹₑ B (Con'ᴹₑ δ' σ'ᴹ) ν
-                    (coe (S & coe-CandΓ (Ty-ₛ∘ₑ σ' δ' B ⁻¹) (Tyᴹ B Σ _ (Con'ᴹₑ δ' σ'ᴹ))) x)))))
-  where postulate cheat : _
+  coe ( ap2 (λ x y → Tyᴹ A Δ (x , Tyₛ σ' B) (y , Ty*ᴹ B σ'ᴹ) .S)
+        (idr'ₛₑ σ' ◾ idl'ₛ σ' ⁻¹) (Con'ᴹ-idₑ σ'ᴹ ◾̃ {!!})
+      ◾ Tyₛᴹ A Δ (id'ₛ , B) σ'ᴹ ⁻¹)
+    (Tmᴹ t σ'ᴹ Γᴹ idₑ (Tyₛ σ' B) (Ty*ᴹ B σ'ᴹ))
 
