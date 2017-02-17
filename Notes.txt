@@ -1,0 +1,15 @@
+
+The issue right now:
+
+if (f₀ : (a : A) → B₀ a), (f₁ : (a :  A) → B₁ a), (f₂ : f₁ ≅ f₂),
+
+then we do NOT have f₀ a ≅ f₁ a, because Π is not injective, and we don't
+have B₀ ≡ B₁.
+
+We can either:
+
+  - use different ext̃ for functions which does not swallow type equality (easiest)
+  - wrap Π in a record and enable --injective-type-constructors (not preferable)
+  - rework het. equality from ground up to be compatible with K, and (obviously)
+    make it so that Π equality contains the return type eq. component (nicest)
+

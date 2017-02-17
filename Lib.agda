@@ -1,4 +1,5 @@
 
+
 module Lib where
 
 open import Level
@@ -77,7 +78,7 @@ infixr 5 _,_
 ∃₂ : {A : Set}{B : A → Set}(C : (x : A) → B x → Set) → Set
 ∃₂ C = ∃ λ a → ∃ λ b → C a b
 
-_×_ : Set → Set → Set
+_×_ : ∀ {α β} → Set α → Set β → Set _
 A × B = Σ A λ _ → B
 infixr 4 _×_
 
@@ -228,4 +229,26 @@ extĩ' :
   → (∀ a₀ a₁ (a₂ : a₀ ≅ a₁) → f₀ {a₀} ≅ f₁ {a₁})
   → (λ {a} → f₀ {a}) ≅ (λ {a} → f₁ {a})
 extĩ' {A₀ = A}{A₁ = .A} {B₀} {B₁} {f₀} {f₁} refl f₂ = extĩ (λ a → f₂ a a refl̃ )
+
+-- ⊗̃ :
+--   ∀ {α β}{A : Set α}{B₀ B₁ : A → Set β}
+--   {f₀ : ∀ a → B₀ a}{f₁ : ∀ a → B₁ a}
+--   (f₂ : f₀ ≅ f₁)
+--   {a₀ a₁ : A}
+--   (a₂ : a₀ ≡ a₁)
+--   → f₀ a₀ ≅ f₁ a₁
+-- ⊗̃ {f₀ = f₀} {f₁} (con ty₁ tm₁) {a₀} {.a₀} refl = {!!}
+
+-- {-# OPTIONS --injective-type-constructors #-}
+
+-- record Π (A : Set) (B : A → Set) : Set₁ where
+--   constructor con
+--   field
+--     _$_ : (a : A) → B a
+--   infixl 6 _$_    
+-- open Π
+
+-- foo : ∀ A B B' → Π A B ≡ Π A B' → B ≡ B'
+-- foo A B .B refl = refl
+
 
