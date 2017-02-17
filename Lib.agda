@@ -63,7 +63,7 @@ refl ⊗ refl = refl
 
 --------------------------------------------------------------------------------
 
-record Σ (A : Set) (B : A → Set) : Set where
+record Σ {α β}(A : Set α) (B : A → Set β) : Set (α ⊔ β) where
   constructor _,_
   field
     proj₁ : A
